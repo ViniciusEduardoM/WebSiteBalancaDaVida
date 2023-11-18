@@ -1,0 +1,11 @@
+﻿@page "/"
+@namespace WebsiteAPIAlimentos.Pages
+<head>
+    <base href="~/" />
+</head>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = "_Layout";
+}
+
+<component type="typeof(App)" render-mode="ServerPrerendered" />

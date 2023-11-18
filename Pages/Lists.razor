@@ -1,0 +1,190 @@
+﻿@page "/counter"
+@inject HttpClient client
+@using BalancaDaVidaAPI.Models;
+@using Newtonsoft.Json;
+@using Radzen.Blazor;
+@using Radzen;
+
+<PageTitle>Lista de alimentos</PageTitle>
+<RadzenStack Gap="0" Style="margin-left:0.75%;">
+
+    <div class="row">
+
+        <div class="col">
+            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Buscar</RadzenText>
+            <RadzenTextBox Style="max-width:30%; min-width:30%; width:30%" @oninput=@(args => SearchChange(args.Value.ToString()))></RadzenTextBox>
+            <div class="mt-1">
+                <RadzenText Style="max-width:30%; min-width:30%; width:30%" Text="Quantidade (em gramas)"></RadzenText>
+                <RadzenNumeric TValue="decimal" @bind-Value=@quantity></RadzenNumeric>
+                <RadzenButton Variant="Variant.Outlined" Icon="add_circle_outline" Text="Adicionar" Click=AddFoods ButtonStyle="ButtonStyle.Primary" />
+            </div>
+        </div>
+
+    </div>
+</RadzenStack>
+
+
+<RadzenDataList WrapItems="true" pag AllowPaging="true" Data="@foods" TItem="Food" PageSize="20" PagingSummaryFormat="@pagingSummaryFormat" PageSizeOptions="@(new List<int>{ 5, 10, 20, 30 })" ShowPagingSummary="true">
+
+    <Template Context="food">
+        <RadzenCard Variant="Radzen.Variant.Filled" Style="max-width:30%; min-width:30%; width:30%">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenRadioButtonList Style="place-self: center;" @bind-Value=@value TValue="string">
+                    <Items>
+                        <RadzenRadioButtonListItem Value="@food.Id" />
+                    </Items>
+                </RadzenRadioButtonList>
+                <RadzenStack Gap="0">
+
+                    <div class="row">
+                        <div class="col-6">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Nome</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.Nome @food.Descricao</b></RadzenText>
+
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Carboidratos (g)</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.CarboidratoG</b></RadzenText>
+                        </div>
+
+                        <div class="col-6">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Proteinas (g)</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.ProteinaG</b></RadzenText>
+
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Colesterol (mg)</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.ColesterolMg</b></RadzenText>
+                        </div>
+                    </div>
+
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+<RadzenDataList WrapItems="true" AllowPaging="false" Data="@selectedFoods" TItem="Food">
+    <Template Context="food">
+        <RadzenCard Variant="Radzen.Variant.Text" Style="max-width:30%; min-width:30%; width:30%">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenStack Gap="0">
+
+                    <div class="row">
+                        <div class="col-6">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Nome</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.Nome @food.Descricao</b></RadzenText>
+
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Carboidratos (g)</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.CarboidratoG</b></RadzenText>
+                        </div>
+                        <div class="col-6">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Proteinas (g)</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.ProteinaG</b></RadzenText>
+
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Colesterol (mg)</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@food.ColesterolMg</b></RadzenText>
+                        </div>
+                    </div>
+
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+<RadzenCard Variant="Variant.Flat" Class="rz-my-12 rz-mx-auto" Style="max-width: 420px">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" Class="rz-p-4">
+        @* <RadzenImage Path="@order?.Employee?.Photo" Style="width: 100px; height: 100px; border-radius: 50%;" /> *@
+        <RadzenStack Gap="0">
+            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Carboidratos Totais</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1"><b>@carbos</b></RadzenText>
+            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Proteinas Totais</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1"><b>@proteins</b></RadzenText>
+            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Colesterol Totais</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1"><b>@colesterol</b></RadzenText>
+        </RadzenStack>
+    </RadzenStack>
+</RadzenCard>
+
+
+
+@code
+{
+    List<Food> allFoods = new List<Food>();
+    List<Food> foods = new List<Food>();
+    List<Food> selectedFoods = new List<Food>();
+
+    decimal quantity;
+    string value = "1";
+    int count = 0;
+
+    decimal carbos = 0;
+    decimal proteins = 0;
+    decimal colesterol = 0;
+
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetFoods();
+
+        foods = GetFoods(0, allFoods.Count).ToList();
+    }
+
+    public async Task GetFoods()
+    {
+        var a = await client.GetAsync("https://localhost:7055/api/Food/All");
+        string result = await a.Content.ReadAsStringAsync();
+        allFoods = JsonConvert.DeserializeObject<List<Food>>(result);
+    }
+
+    public async Task SearchChange(string value)
+    {
+        foods = allFoods.Where(x => x.Nome.Contains(value) || x.Descricao.Contains(value)).ToList();
+    }
+
+    public async Task AddFoods()
+    {
+        Food selectedAA = foods.FirstOrDefault(x => x.Id == value);
+
+        Food selected = new Food
+        {
+            Id = selectedAA.Id,
+                CarboidratoG = selectedAA.CarboidratoG,
+                ProteinaG = selectedAA.ProteinaG,
+                ColesterolMg = selectedAA.ColesterolMg,
+                Nome = selectedAA.Nome
+        };
+
+        bool trya = Decimal.TryParse(selected.CarboidratoG, out decimal a);
+        bool tryb = Decimal.TryParse(selected.ProteinaG, out decimal b);
+        bool tryc = Decimal.TryParse(selected.ColesterolMg, out decimal c);
+
+        selected.CarboidratoG = trya ? ((a * quantity) / 100).ToString() : "0";
+        selected.ProteinaG = tryb ? ((b * quantity) / 100).ToString() : "0";
+        selected.ColesterolMg = tryc ? (((c * quantity) / 1000) / 100).ToString() : "0";
+
+        carbos += Convert.ToDecimal(selected.CarboidratoG);
+        proteins += Convert.ToDecimal(selected.ProteinaG);
+        colesterol += Convert.ToDecimal(selected.ColesterolMg);
+
+        if (selectedFoods.Any(x => x.Id == selected.Id))
+        {
+            var d = selectedFoods.FirstOrDefault(x => x.Id == selected.Id);
+
+            d.CarboidratoG = (Convert.ToDecimal(d.CarboidratoG) + Convert.ToDecimal(selected.CarboidratoG)).ToString();
+            d.ProteinaG = (Convert.ToDecimal(d.ProteinaG) + Convert.ToDecimal(selected.ProteinaG)).ToString();
+            d.ColesterolMg = (Convert.ToDecimal(d.ColesterolMg) + Convert.ToDecimal(selected.ColesterolMg)).ToString();
+        }
+        else
+            selectedFoods.Add(selected);
+    }
+
+
+    void PageChanged(PagerEventArgs args)
+    {
+        foods = GetFoods(args.Skip, args.Top).ToList();
+    }
+
+    IEnumerable<Food> GetFoods(int skip, int take)
+    {
+        return allFoods.Skip(skip).Take(take).ToList();
+    }
+}

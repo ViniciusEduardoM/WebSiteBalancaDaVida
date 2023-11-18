@@ -1,0 +1,55 @@
+﻿@page "/"
+@using BalancaDaVidaAPI.Models;
+@using Newtonsoft.Json;
+@using Radzen.Blazor
+@using Radzen;
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<h3>Bem-vindo ao NutriInfo!</h3>
+
+<p>Explore nossa vasta coleção de alimentos e descubra seus valores nutricionais para uma alimentação mais saudável.</p>
+
+<RadzenGrid @ref="grid" TItem="Food" Data="@foods" PageSize="10">
+    <Columns>
+        <RadzenGridColumn TItem="Food" Property="nome" Title="Nome" />
+        <RadzenGridColumn TItem="Food" Property="descricao" Title="Descrição" />
+        <RadzenGridColumn TItem="Food" Property="proteína_g" Title="Proteína (g)" />
+        <RadzenGridColumn TItem="Food" Property="carboidrato_g" Title="Carboidratos (g)" />
+        <RadzenGridColumn TItem="Food" Property="colesterol_mg" Title="Colesterol (g)" />
+    </Columns>
+</RadzenGrid>
+
+@code {
+    RadzenGrid<Food> grid;
+    List<Food> foods;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Substitua a URL abaixo pela sua API real
+        var apiUrl = "https://localhost:7055/api/Food/ByName/Carne";
+
+
+        // Simula a chamada à API para recuperar dados
+        using (var client = new HttpClient())
+        {
+            var response = await client.GetStringAsync(apiUrl);
+            foods = JsonConvert.DeserializeObject<List<Food>>(response);
+            foods.RemoveRange(7, foods.Count - 10);
+        }
+    }
+}
+
+@*      public int ID { get; set; }
+        public string nome { get; set; }
+        public string descricao { get; set; }
+        public string umidade { get; set; }
+        public string proteína_g { get; set; }
+        public string colesterol_mg { get; set; }
+        public string carboidrato_g { get; set; }
+        public string fibra_Alimentar_g { get; set; }
+        public string calcio_mg { get; set; }
+        public string ferro_mg { get; set; }
+        public string sodio_mg { get; set; }
+        public string potassio_mg { get; set; }
+        public string vitaminac_mg { get; set; } *@
